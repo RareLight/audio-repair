@@ -369,6 +369,21 @@ class InferenceTests(unittest.TestCase):
             ), self.assertRaisesRegex(ValueError, message):
                 inference.resolve_chunking(chunk_seconds, overlap_seconds)
 
+    def test_progress_reports_completed_batches_and_single_pass(self):
+        audio = torch.ones((1, 2, 22))
+        for chunk_samples, expected in (
+            (6, [(0, 5), (2, 5), (4, 5), (5, 5)]),
+            (None, [(0, 1), (1, 1)]),
+        ):
+            with self.subTest(chunk_samples=chunk_samples):
+                progress = mock.Mock()
+                result = inference.run_model(
+                    torch.nn.Identity(), audio, torch.device("cpu"), chunk_samples=chunk_samples,
+                    overlap_samples=2, chunk_batch_size=2, chunk_progress=progress,
+                )
+                self.assertEqual(progress.call_args_list, [mock.call(*counts) for counts in expected])
+                torch.testing.assert_close(result, audio)
+
     def test_chunking_rejects_short_model_output(self):
         audio = torch.zeros(1, 2, 100)
         with self.assertRaisesRegex(RuntimeError, "shorter"):

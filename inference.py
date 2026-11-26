@@ -145,6 +145,8 @@ def run_model(
     overlap_samples=0,
     chunk_batch_size=1,
     chunk_pad_samples=0,
+    *,
+    chunk_progress=None,
 ):
     """Run full-file or batched normalized overlap-add chunked inference.
 
@@ -156,14 +158,22 @@ def run_model(
 
     total_samples = audio.shape[-1]
     if chunk_samples is None or total_samples <= chunk_samples:
-        return model(audio.to(device)).detach().to("cpu")
+        if chunk_progress is not None:
+            chunk_progress(0, 1)
+        output = model(audio.to(device)).detach().to("cpu")
+        if chunk_progress is not None:
+            chunk_progress(1, 1)
+        return output
 
     output_sum = torch.zeros_like(audio, device="cpu")
     weight_sum = torch.zeros((1, 1, total_samples), dtype=audio.dtype)
     starts = chunk_starts(total_samples, chunk_samples, overlap_samples)
     padded_chunk_samples = chunk_samples + 2 * chunk_pad_samples
 
-    for batch_start in range(0, len(starts), chunk_batch_size):
+    total_chunks = len(starts)
+    if chunk_progress is not None:
+        chunk_progress(0, total_chunks)
+    for batch_start in range(0, total_chunks, chunk_batch_size):
         batch_starts = starts[batch_start : batch_start + chunk_batch_size]
         batch_chunks = []
         valid_lengths = []
@@ -210,15 +220,23 @@ def run_model(
                 valid_samples,
                 overlap_samples,
                 fade_in=index > 0,
-                fade_out=index < len(starts) - 1,
+                fade_out=index < total_chunks - 1,
                 dtype=audio.dtype,
             )
             output_sum[..., start:end] += chunk_output * weights
             weight_sum[..., start:end] += weights
 
+        if chunk_progress is not None:
+            completed = batch_start + len(batch_starts)
+            if completed < total_chunks:
+                chunk_progress(completed, total_chunks)
+
     if torch.any(weight_sum <= 0):
         raise RuntimeError("Chunk overlap-add left uncovered output samples.")
-    return output_sum / weight_sum
+    output = output_sum / weight_sum
+    if chunk_progress is not None:
+        chunk_progress(total_chunks, total_chunks)
+    return output
 
 
 def run_inference(
@@ -230,6 +248,8 @@ def run_inference(
     overlap_seconds=1.0,
     chunk_batch_size=1,
     chunk_pad_seconds=0.0,
+    *,
+    chunk_progress=None,
 ):
     input_path = Path(input_wav)
     output_path = Path(output_wav)
@@ -262,6 +282,7 @@ def run_inference(
             overlap_samples=overlap_samples,
             chunk_batch_size=chunk_batch_size,
             chunk_pad_samples=chunk_pad_samples,
+            chunk_progress=chunk_progress,
         )
     save_audio(output_path, output, sample_rate)
     return device

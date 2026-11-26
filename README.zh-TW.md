@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="asserts/apollo-logo.png" alt="Apollo logo" width="150"/>
+  <img src="https://cslikai.cn/Apollo/asserts/apollo-logo.png" alt="Apollo logo" width="150"/>
 </p>
 
 # Apollo 繁體中文導讀
@@ -21,7 +21,8 @@ Apollo 是一個用於 high-quality audio restoration 的 generative model，目
 ## Quick links
 
 - [English README](README.md)
-- [Apple Silicon macOS notes](MACOS_ARM64.md)
+- [Audio Repair CLI](docs/AUDIO_REPAIR.md)
+- [Apple Silicon macOS notes](docs/MACOS_ARM64.md)
 - [Apollo-data-preprocess](https://github.com/JusperLee/Apollo-data-preprocess)
 - [Hugging Face checkpoint](https://huggingface.co/JusperLee/Apollo)
 - [Demo](https://cslikai.cn/Apollo/)
@@ -36,16 +37,16 @@ conda create --name look2hear --file look2hear.yml
 conda activate look2hear
 ```
 
-Apple Silicon 使用者可另參閱 [MACOS_ARM64.md](MACOS_ARM64.md)，其中記錄 native arm64 Python、PyTorch MPS 與目前已知限制。
+Apple Silicon 使用者可另參閱 [macOS 使用說明](docs/MACOS_ARM64.md)，其中記錄 native arm64 Python、PyTorch MPS 與目前已知限制。
 
 ## Inference
 
-以 repository 內的 public fixture 執行：
+下載 [公開測試音檔](docs/MACOS_ARM64.md#public-smoke-test) 後，在此專案的根目錄執行：
 
 ```bash
 python inference.py \
-  --in_wav=asserts/input_wav.wav \
-  --out_wav=output.wav \
+  --in_wav=media/apollo-demo/input_wav.wav \
+  --out_wav=media/smoke-tests/output.wav \
   --device=auto
 ```
 
@@ -67,12 +68,12 @@ Apollo 使用 MUSDB18-HQ 與 MoisesDB。dataset 取得方式、Source Activity D
 Training command：
 
 ```bash
-python train.py --conf_dir=configs/apollo.yml
+python train.py --conf_dir=configs/apollo.yaml
 ```
 
 ## Results, license, and citation
 
-- Results figures: [bitrates](asserts/bitrates.png), [music types](asserts/types.png)
+- Results figures: [bitrates](https://cslikai.cn/Apollo/asserts/bitrates.png), [music types](https://cslikai.cn/Apollo/asserts/types.png)
 - License: [CC BY-SA 4.0](http://creativecommons.org/licenses/by-sa/4.0/)
 - Citation information: [English README](README.md#citation)
 - Contact: `tsinghua.kaili@gmail.com`

@@ -1,5 +1,34 @@
+# Audio Repair
+
+Audio Repair is a terminal tool for restoring the audio in local recordings
+with [Apollo](https://github.com/JusperLee/Apollo). It can repair audio files
+to FLAC, replace a video's audio track in an MKV, and process a queue one
+file at a time. Start with the [CLI guide](docs/AUDIO_REPAIR.md#install-on-apple-silicon).
+
+```sh
+audio-repair recording.mp4 --sample-video --start 00:02:15
+audio-repair *.mp4
+```
+
+| Path | Purpose |
+| --- | --- |
+| [audio_repair/](audio_repair/) | Fork CLI, terminal output, and media pipeline |
+| [inference.py](inference.py), [look2hear/](look2hear/) | Apollo inference entry point and model code |
+| [docs/](docs/) | CLI guide, Apple Silicon notes, and implementation brief |
+| [requirements/](requirements/) | Apple Silicon environment requirements |
+| [tests/cli/](tests/cli/), [tests/test_inference.py](tests/test_inference.py) | CLI and Apollo tests |
+| [site/](site/) | GitHub Pages demo using Apollo's publicly hosted media |
+
+Run tests from the checkout root with `python -m unittest discover -s tests -v`.
+Tests generate their media in temporary directories. Keep local recordings
+and smoke-test outputs under the ignored `media/` directory. Store
+credentials outside the checkout, such as in your OS credential store or
+the relevant tool's user configuration.
+
+---
+
 <p align="center">
-  <img src="asserts/apollo-logo.png" alt="Logo" width="150"/>
+  <img src="https://cslikai.cn/Apollo/asserts/apollo-logo.png" alt="Apollo logo" width="150"/>
 </p>
 
 <p align="center">
@@ -29,12 +58,12 @@ Audio restoration has become increasingly significant in modern society, not onl
 ## 🔥 News
 
 - [2025.03.07] We released the training data preprocessing code on [Apollo-data-preprocess](https://github.com/JusperLee/Apollo-data-preprocess).
-- [2024.09.10] Apollo is now available on [ArXiv](#) and [Demo](https://cslikai.cn/Apollo/).
+- [2024.09.10] Apollo is now available on [ArXiv](https://arxiv.org/abs/2409.08514) and [Demo](https://cslikai.cn/Apollo/).
 - [2024.09.10] Apollo checkpoints and pre-trained models are available for download.
 
 ## ⚡️ Installation
 
-Clone the repository
+For Apollo's original Linux/CUDA workflow, clone the upstream repository.
 
 ```bash
 git clone https://github.com/JusperLee/Apollo.git && cd Apollo
@@ -73,16 +102,17 @@ During data preprocessing, we drew inspiration from music separation techniques 
 To train the Apollo model, run the following command:
 
 ```bash
-python train.py --conf_dir=configs/apollo.yml
+python train.py --conf_dir=configs/apollo.yaml
 ```
 
 ### 🎨 Evaluation
-To evaluate the Apollo model, run the following command:
+From this checkout, download the [public test WAV](docs/MACOS_ARM64.md#public-smoke-test)
+and run Apollo's direct inference entry point:
 
 ```bash
 python inference.py \
-  --in_wav=asserts/input_wav.wav \
-  --out_wav=output.wav \
+  --in_wav=media/apollo-demo/input_wav.wav \
+  --out_wav=media/smoke-tests/output.wav \
   --device=auto
 ```
 
@@ -116,18 +146,18 @@ side and discards it from the output; with its default of `0` the listener may
 hear artifacts at the chunk seams. Chunking
 can change the result relative to full-file inference because the model sees
 less context, so important material should still receive a listening check. See
-[Apple Silicon macOS notes](MACOS_ARM64.md) for a tested MPS setup and current
+[Apple Silicon macOS notes](docs/MACOS_ARM64.md) for a tested MPS setup and current
 limitations.
 
 ## 📊 Results
 
 *Here, you can include a brief overview of the performance metrics or results that Apollo achieves using different bitrates*
 
-![](./asserts/bitrates.png)
+![](https://cslikai.cn/Apollo/asserts/bitrates.png)
 
 
 *Different methods' SDR/SI-SNR/VISQOL scores for various types of music, as well as the number of model parameters and GPU inference time. For the GPU inference time test, a music signal with a sampling rate of 44.1 kHz and a length of 1 second was used.*
-![](./asserts/types.png)
+![](https://cslikai.cn/Apollo/asserts/types.png)
 
 ## License
 
